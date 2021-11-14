@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.9.0/firebase-app.min.js" integrity="sha512-nC66+zehkpg/Hi0JGuizcch2mmCpFF6jCMiVJxPMu2vyEcquDNrTenI4ZGBN5G9OJVNnhzlEQ1IbQa8hvYZbtQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.9.0/firebase-auth.min.js" integrity="sha512-GAEvFso2oksY5JFkHlrfLhZgAV6aL48qxnbxPnbKnNLeG/XsU/c0lh/g9gocZ2RtbRx6VDTqspPEy9ixWvbfzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.9.0/firebase-database.min.js" integrity="sha512-VznTxsL4sJoS2/NltqekuuqVpubhE6g4XnxTo9wMZ9i0MCA7JC/55vuVh9+Wm9gMCdYJwxAXoaHq27uyqqJMTQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>Firebase Smokeshop</title>
+</head>
+<body>
+    <div class="signed-out-div">
+    
+        <div class="container">
+            <h1 class="header-h1">- Grinch's Kush -</h1>
+
+            <div class="grinch-giph"></div>
+            <div class="weed-giph"></div>
+            <div class="card">
+                <button onclick="signIn()" class="signin-btn btn">Sign In</button>
+            </div>
+        </div>
+
+
+        <div class="footer">
+            <p>Brat@pp&copy;</p>
+        </div>
+    </div>
+    <div class="signed-in-div" hidden>
+        <h1>Welcome <span class="displayname"></span></h1>
+        <div onclick="signOut()" class="signedout-btn">Signed Out</div>
+    </div>
+
+
+    <script>
+        const signedInDiv = document.querySelector(".signed-in-div")
+        const signedOutDiv = document.querySelector(".signed-out-div")
+        const displaynameEl = document.querySelector(".displayname")
+        
+        
+        const grinchEl = document.querySelector(".grinch-giph")
+        const weedEl = document.querySelector(".weed-giph")
+        const APIKEY = "uKphAK8kteX2OKtsDfh5n97qdjER4ErO"
+        let app,auth,db;
+
+        document.addEventListener("DOMContentLoaded",async()=>{
+            console.log("domContent loaded");
+            const firebaseConfig = {
+                    apiKey: "AIzaSyB6tkBb1ivxWA4XPgAMLpOK2V5zFTAwhws",
+                    authDomain: "newproj-fd49c.firebaseapp.com",
+                    projectId: "newproj-fd49c",
+                    storageBucket: "newproj-fd49c.appspot.com",
+                    messagingSenderId: "378574329763",
+                    appId: "1:378574329763:web:b8f72dfacb55bdfaac6c16"
+};
+            app = firebase.initializeApp(firebaseConfig)
+            auth = app.auth()
+
+           let giph =  await fetchGrinch()
+           renderGiph(giph)
+
+           auth.onAuthStateChanged(user=>{
+
+               if(user){
+                   signedInDiv.hidden = false;
+                   signedOutDiv.hidden = true;
+                   displaynameEl.innerHTML = user.displayName
+               }
+               else{
+                signedInDiv.hidden = true;
+                signedOutDiv.hidden = false;
+               }
+           })
+            // db = app.db()
+        })
+
+
+        function signIn(){
+            console.log('signIn fired');
+            let provider = new firebase.auth.GoogleAuthProvider()
+            firebase.auth().signInWithPopup(provider);
+        }
+
+        function signOut(){
+            console.log("signed-out")
+            firebase.auth().signOut()
+        }
+
+        async function fetchGrinch(){
+           let response = await fetch(`https://api.giphy.com/v1/gifs/search?q=grinch&api_key=${APIKEY}`)
+           let weedresponse = await fetch(`https://api.giphy.com/v1/gifs/search?q=weed&api_key=${APIKEY}`)
+           let json = await response.json();
+           let wjson = await weedresponse.json();
+           console.log(json)
+           return {grinch:json.data[Math.random() * json.data.length | 0],
+                   weed:wjson.data[Math.random() * wjson.data.length | 0]}
+        } 
+
+
+        function renderGiph(giph){
+            console.log(giph)
+            grinchEl.innerHTML = `<img class="giph-img" src=${giph.grinch.images.fixed_height.url}/>`
+            weedEl.innerHTML = `<img class="weed-img" src=${giph.weed.images.fixed_height.url}/>`
+        }
+
+
+
+        var arr = [];
+        for(let i=0;i<50;i++){
+            arr.push(Math.random() * 200 | 0)
+        }
+
+
+        function swap(arr,i,j){
+            let temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+
+
+        function max_heap(arr,i,length){
+            console.log("sort")
+            let left = i * 2 + 1;
+            let right = i * 2 + 2;
+            let max;
+            
+            if(right < length){
+                if(arr[left] > arr[right]){
+                    max = left;
+                }
+                else{
+                    max = right
+                }
+            }
+            else if(left < length)max = left;
+            else return;
+
+            if(arr[max] > arr[i]){
+                swap(arr,i,max)
+                max_heap(arr,max,length)
+            }
+        }
+
+
+        function heap_sort(arr){
+            let length = arr.length-1;
+            for(let i = Math.floor(length/2) +1;i>=0;i--){
+                max_heap(arr,i,length)
+            }
+
+            for(let i=length;i>=0;i--){
+                swap(arr,0,i)
+                max_heap(arr,0,i)
+            }
+
+            return arr;
+        }
+
+        console.log(heap_sort(arr))
+    </script>
+
+</body>
+</html>
